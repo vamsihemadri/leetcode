@@ -1,85 +1,48 @@
 class Solution {
-    public int numBusesToDestination(int[][] routes, int s, int target) {
+    public int numBusesToDestination(int[][] routes, int source, int target) {
         
-        if(s==target)
-            return 0;
+        Map<Integer, Set<Integer>> stopToRoutesMap = new HashMap();
         
-        Map<Integer, Set<Integer>> map = new HashMap();
-        
-        Map<Integer, List<Integer>> map2 = new HashMap();
-        
-        int r = 0;
+        int i = 0;
         for(int[] route: routes){
-            map.computeIfAbsent(r,k-> new HashSet());
-            for(int v: route){
-                map.get(r).add(v);
-                map2.computeIfAbsent(v,k-> new ArrayList());
-                map2.get(v).add(r);
+            for(int stop : route){
+                Set<Integer> r = stopToRoutesMap.getOrDefault(stop, new HashSet());
+                r.add(i);
+                stopToRoutesMap.put(stop, r);
             }
-            r++;  
+            i++;
         }
         
-        for(Integer key: map.keySet()){
-            Set<Integer> set = map.get(key);
-            if(set.contains(s) && set.contains(target))
-                return 1;
-        }
+        Set<Integer> visited = new HashSet();
+        boolean[] seenRoutes = new boolean[i];
         
+        Queue<int[]> q = new LinkedList();
+        q.offer(new int[]{source, 0});
         
-        Map<Integer, Set<Integer>> adjMap = new HashMap();
+        visited.add(source);
         
-        
-        for(Integer key: map2.keySet()){
-            List<Integer> list = map2.get(key);
-            
-            for(int i = 0;i<list.size();i++){
-                for(int j = i+1;j<list.size();j++){
-                    int source = list.get(i);
-                    int dest = list.get(j);
-                    
-                    adjMap.computeIfAbsent(source, k-> new HashSet());
-                    adjMap.get(source).add(dest);
-                    
-                    adjMap.computeIfAbsent(dest,k-> new HashSet());
-                    adjMap.get(dest).add(source);
-                }
-            }
-        }
-        
-        int[] dist = new int[routes.length];
-        Arrays.fill(dist, Integer.MAX_VALUE);
-        
-        Queue<Integer> q = new LinkedList();
-        
-        for(int rr: map2.get(s)){
-            dist[rr] = 1;
-            q.offer(rr);
-        }
         
         while(!q.isEmpty()){
-            int top = q.poll();
+            int[] top = q.poll();
+            if(top[0]==target)
+                return top[1];
             
-            Set<Integer> neis  = adjMap.getOrDefault(top, new HashSet());
-            // if(map.getOrDefault(top,new HashSet()).contains(target)){
-            //     return dist[top];
-            // }
-            for(int nei: neis){
-                int d = dist[nei];
-                
-                if(dist[top] + 1 < d){
-                    q.offer(nei);
-                    dist[nei] = dist[top]+1;
+            
+            Set<Integer> routesOfStop = stopToRoutesMap.getOrDefault(top[0],new HashSet());
+            for(int r : routesOfStop){
+                if(!seenRoutes[r]){
+                    int[] stops = routes[r];
+                    for(int stop :  stops){
+                        if(!visited.contains(stop)){
+                            visited.add(stop);
+                            q.offer(new int[]{stop, top[1]+1});
+                        }
+                    }
+                    seenRoutes[r] = true;
                 }
             }
         }
-        
-        int ans = Integer.MAX_VALUE;
-        for(Integer rrr : map2.getOrDefault(target,new ArrayList<Integer>())){
-            ans = Math.min(ans, dist[rrr]);
-        }
-        if(ans == Integer.MAX_VALUE)
-            return -1;
-        return ans;
+        return -1;
         
     }
 }
