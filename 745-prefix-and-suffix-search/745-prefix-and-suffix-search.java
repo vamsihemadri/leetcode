@@ -4,16 +4,15 @@ class WordFilter {
     TrieNode suf;
     public WordFilter(String[] words) {
         
-        Comparator cmp = new CustomComparator(words);
-        pre = new TrieNode(cmp);
-        suf = new TrieNode(cmp);
+        pre = new TrieNode();
+        suf = new TrieNode();
         
         Set<String> added = new HashSet();
         
         for(int i = words.length-1;i>=0;i--){
             if(!added.contains(words[i])){
-                insertIntoTrie(i,pre,words[i],0,cmp);
-                insertIntoTrie(i,suf,reverse(words[i]),0,cmp);
+                insertIntoTrie(i,pre,words[i],0);
+                insertIntoTrie(i,suf,reverse(words[i]),0);
                 added.add(words[i]);
             }
         }
@@ -59,21 +58,19 @@ class WordFilter {
         return node.pq;
     }
     
-    private void insertIntoTrie(int index,TrieNode node, String word, int pos, Comparator cmp){
+    private void insertIntoTrie(int index,TrieNode node, String word, int pos){
         
         if(pos == word.length())
             return;
         
         if(!node.map.containsKey(word.charAt(pos))){
-            node.map.put(word.charAt(pos),new TrieNode(cmp));
+            node.map.put(word.charAt(pos),new TrieNode());
         }
         
-        //node.pq.offer(pos);
         node = node.map.get(word.charAt(pos));
-        //node.set.add(index);
         node.pq.offer(index);
         
-        insertIntoTrie(index,node,word,pos+1,cmp);
+        insertIntoTrie(index,node,word,pos+1);
     }
 }
 
@@ -86,23 +83,10 @@ class TrieNode{
     
     Map<Character, TrieNode> map;
     PriorityQueue<Integer> pq;
-    Set<Integer> set = new HashSet();
     
-    public TrieNode(Comparator comparator){
+    public TrieNode(){
         map = new HashMap();
         pq = new PriorityQueue<Integer>(Collections.reverseOrder());
-        set = new HashSet();
     }
     
-}
-
-class CustomComparator implements Comparator<Integer>{
-    
-    String[] words;
-    public CustomComparator(String[] w){
-        words = w;
-    }
-    public int compare(Integer a, Integer b){
-        return words[b].length()-words[a].length();
-    }
 }
